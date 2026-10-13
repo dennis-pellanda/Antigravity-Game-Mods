@@ -1,0 +1,19 @@
+﻿# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.BIN/
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+
+# Syncthing
+.stfolder/
+.stversions/
+
+# Python
+__pycache__/
+*.py[cod]
