@@ -17,20 +17,18 @@ Questo documento tiene traccia delle analisi, delle richieste dell'utente e di t
 
 ---
 
-## 2. Richieste dell'Utente
+## 2. Richieste dell'Utente & Esito Tecnico
 
 1. **Localizzazione e Verifica Versione**:
    - Individuare dove e quale versione del videogioco Roadcraft fosse installata sul PC.
    - Ripristinare il collegamento sul Desktop che puntava a un vecchio percorso non più valido.
-2. **Ricarica di Sabbia Globale (Ovunque sulla mappa)**:
-   - Risolvere il problema delle mod/tabelle Cheat Engine che non funzionavano o davano errori.
-   - Permettere di riempire i cassoni dei camion con la sabbia in qualunque punto della mappa, in qualsiasi momento.
-3. **Velocità di Riempimento Aumentata**:
-   - Accelerare sensibilmente il tempo necessario per caricare la sabbia nei cassoni.
-4. **Risoluzione Errore "Entrare nel raggio di una cava"**:
-   - Dopo la prima modifica delle sole cave, il gioco continuava a mostrare l'avviso di distanza non valida.
-5. **Opzione Futura (Tenuta in considerazione)**:
-   - Cassone con sabbia infinita / senza svuotamento continuo (annotato per futuri sviluppi).
+2. **Tentativo Ricarica di Sabbia Globale (Non funzionante in v4.1)**:
+   - Tentativo di permettere il riempimento dei cassoni da qualsiasi punto della mappa forzando parametri di distanza (`sandDistance`).
+   - **Esito riscontrato**: *Non funzionante*. La ricarica remota ovunque non ha mai operato con successo nella v4.1 perché la logica dell'engine esige la presenza fisica presso la cava (funzionalità poi risolta nella v6.0 tramite la proprietà nativa `volumeChangeMult = 0.0` per sabbia infinita).
+3. **Velocità di Riempimento Aumentata (Funzionante)**:
+   - Accelerare sensibilmente il tempo necessario per caricare la sabbia nei cassoni presso le cave (impostato `refillSpeed = 5.0`).
+4. **Costo di Attivazione Cave Azzerato (Funzionante)**:
+   - Azzeramento del carburante/monete richiesto dalle cave (`fuelCoinsForActivate = 0`).
 
 ---
 
@@ -46,10 +44,9 @@ I file di configurazione del gioco, dei veicoli e degli edifici risiedono in arc
      `version (uint32=6) + flag (0x3F) + nome_len (uint32) + nome + data_offset (uint64) + uncompressed_size (uint64) + compressed_size (uint64) + compression_method (uint16) + crc32 (uint32)`.
    - **Nota Critica**: Se si modifica un file compresso all'interno del PAK alterandone i byte o gli offset senza rigenerare byte-per-byte il `.pak.cache`, il gioco crasha all'avvio o non trova più gli asset.
 
-### Perché la prima modifica dava "Entrare nel raggio di una cava":
-Nel motore Saber la verifica di prossimità è **doppia e bidirezionale**:
-1. **Lato Cava (Edificio)**: La cava definisce un raggio di erogazione (`distance`, `sandDistance`, `sandReceivingDistance`).
-2. **Lato Camion (Veicolo)**: Ogni singolo camion con cassone ribaltabile possiede un modulo `prop_load_volume_controller` con un proprio parametro `sandDistance` (tipicamente impostato a 20-50 metri) e un controllo OBB (`isOBBCheck`). Se il camion si trova a più di 35 metri da un punto cava, è il camion stesso a bloccare l'interazione sul controller del volume di carico, mostrando l'avviso a schermo.
+### Limite della verifica di distanza in v4.1:
+Nel motore Saber la verifica di prossimità alle cave è vincolata internamente:
+- Anche provando a incrementare `distance` o `sandDistance` a valori elevati nei file `.cls`/`.prop`, il trigger interattivo di aggancio UI e avvio erogazione richiede la prossimità fisica all'edificio cava. La ricarica remota da ovunque non è quindi ottenibile tramite semplici modifiche ai file di configurazione nella v4.1.
 
 ---
 
@@ -57,30 +54,16 @@ Nel motore Saber la verifica di prossimità è **doppia e bidirezionale**:
 
 Tutte le modifiche sono state implementate ricompilando `default_other.pak` e ricostruendo integralmente `default_other.pak.cache` tramite script Python dedicato.
 
-### A. Cave di Sabbia (21 file `.cls` + 1 file `.prop`):
-- File modificati:
-  - `ssl/game/buildings/sand/prop_sand_quarry.prop`
-  - Tutti i 21 file `sand_quarry_*.cls` e varianti in `ssl/game/buildings/sand/`
-- Valori impostati:
-  - `distance = 999999` (raggio globale su tutta la mappa)
-  - `sandDistance = 999999`
-  - `sandReceivingDistance = 999999`
-  - `isOBBCheck = False` (disattivato controllo del bounding box geometrico)
-  - `fuelCoinsForActivate = 0` (costo attivazione azzerato)
-  - `maxSand = 99999`
+### A. Modifiche Funzionanti:
+1. **Camion con Cassone Ribaltabile (14 file `.cls` + 1 file `.prop`)**:
+   - `ssl/game/truck/prop_load_volume_controller.prop` e camion in `ssl/game/truck/heavy_dump/`, `medium_dump/`, `light_dump/`, ecc.
+   - `refillSpeed = 5.0` (velocità di riempimento quintuplicata rispetto al valore base 1.0 presso le cave).
+2. **Costo Cave Azzerato (21 file `.cls`)**:
+   - File `sand_quarry_*.cls` in `ssl/game/buildings/sand/`.
+   - `fuelCoinsForActivate = 0` (costo attivazione azzerato).
 
-### B. Camion con Cassone Ribaltabile (14 file `.cls` + 1 file `.prop`):
-- File modificati:
-  - `ssl/game/truck/prop_load_volume_controller.prop`
-  - Tutti i 14 file `.cls` dei camion da trasporto sabbia in `ssl/game/truck/heavy_dump/`, `medium_dump/`, `light_dump/`, ecc.
-- Valori impostati:
-  - `sandDistance = 999999` (il camion accetta sabbia a distanza infinita)
-  - `focusDistance = 999999`
-  - `refillSpeed = 5.0` (velocità di riempimento quintuplicata rispetto al valore base 1.0)
-
-### C. Smart Entry Point:
-- File modificato: `ssl/game/truck/heavy_dump/smart_entry_point_truck_sand_storage.sso`
-- Rimosso vincolo di auto-esclusione `UsableCheckerIgnoreSelf = { }` che poteva interferire con il trigger remoto.
+### B. Parametri Sperimentali di Distanza (Non Efficaci):
+- I parametri `distance = 999999`, `sandDistance = 999999` e `isOBBCheck = False` applicati a cave e camion rimangono nel file come tentativo storico, ma non consentono l'erogazione remota da tutta la mappa. Per ottenere l'effetto desiderato di operare ovunque senza esaurire la sabbia, la soluzione definitiva è stata implementata nella versione **v6.0** con il parametro `volumeChangeMult = 0.0`.
 
 ---
 

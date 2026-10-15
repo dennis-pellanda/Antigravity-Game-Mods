@@ -8,7 +8,7 @@ Raccolta centralizzata di mod, toolchain di reverse engineering, script di compi
 
 | Gioco | Versioni Target | Mod & Funzionalità Principali | Cartella |
 | :--- | :--- | :--- | :--- |
-| **RoadCraft** | `v6.0` (*Anniversary*)<br>`v4.1` (*2025*) | **v6.0**: Sabbia infinita nativa (`volumeChangeMult = 0.0`), coppia 10x su 298 camion, rulli 15.3m, asfaltatrici 10.6m, lame 12m, fix caricamento.<br>**v4.1**: Ricarica remota ovunque, velocità $5\times$, attivazione zero. | [**RoadCraft**](./RoadCraft) |
+| **RoadCraft** | `v6.0` (*Anniversary*)<br>`v4.1` (*2025*) | **v6.0**: Sabbia infinita nativa (`volumeChangeMult = 0.0`), coppia 10x su 298 camion, rulli 15.3m, asfaltatrici 10.6m, lame 12m, fix caricamento.<br>**v4.1**: Velocità di riempimento $5\times$, costo attivazione cave azzerato, ricostruzione indice `.pak.cache`. | [**RoadCraft**](./RoadCraft) |
 | **SimCity 4 Deluxe Edition** | `1.1.641.0` (EA App / Maxis) | Pacchetto Ordinanze con pannello in-game a spunte (fondi infiniti, energia, acqua, inquinamento zero, RCI max), sblocco Extra Cheats DLL, fix 2K/4K dgVoodoo2, fix crash `0x00884fe1`. | [**SimCity 4 Deluxe Edition**](./SimCity%204%20Deluxe%20Edition) |
 
 ---
